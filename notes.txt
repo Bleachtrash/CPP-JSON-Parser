@@ -1,0 +1,23 @@
+struct JSON
+{
+    string key = "value";
+    struct list
+    {
+        string 0 = "list element"
+        struct 1
+        {
+            string key = "value";
+            int number = 1;
+        }
+    }
+}
+
+JSON Grammer:
+
+<Expression>    ::= {<JSON>}
+<JSON>          ::= <Element> | <Element>,<JSON>
+<Element>       ::= "<STR>":<Value>
+<Value>         ::= "<STR>" | <NUM> | [<List>] | {<JSON>}
+<List>          ::= <Value> | <Value>,<List>
+<STR>           ::= [a-Z] | [a-Z]<STR>
+<NUM>           ::= [1-9] | [1-9]<NUM>

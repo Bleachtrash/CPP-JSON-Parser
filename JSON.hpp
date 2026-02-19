@@ -1,0 +1,10 @@
+{
+    "key": "value",
+    "list": [
+        "list element",
+        {
+            "key": "value",
+            "number": 1
+        }
+    ]
+}

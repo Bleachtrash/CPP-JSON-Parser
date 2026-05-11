@@ -1,6 +1,8 @@
 #include "src/json.hpp"
 #include <string>
 #include <vector>
+#include <fstream>
+#include <sstream>
 #include "src/Tokenizer.hpp"
 
 JSON& JSON::operator[](std::string key)
@@ -11,23 +13,32 @@ JSON& JSON::operator[](std::string key)
 JSON& JSON::operator =(std::string val)
 {
     this->j_type = j_string;
-    this->vals.s = val;
+    this->vals.str = val;
     return *this;
 }
 JSON& JSON::operator=(float val)
 {
     this->j_type = j_float;
-    this->vals.f = val;
+    this->vals.fl = val;
     return *this;
 }
 
-std::string JSON::toString()
+std::string JSON::s()
 {
-    return this->vals.s;
+    return this->vals.str;
 }
-float JSON::toFloat()
+float JSON::f()
 {
-    return this->vals.f;
+    return this->vals.fl;
+}
+std::vector<JSON> JSON::l()
+{
+    return this->vals.list;
+}
+
+JSON JSON::j()
+{
+    return *(this->vals.json);
 }
 
 void JSON::parse(std::string json_str)
@@ -36,9 +47,60 @@ void JSON::parse(std::string json_str)
 }
 
 
+void parse_list(Tokenizer* t, JSON& json);
+
+JSON parse_value(Tokenizer* t)
+{
+    JSON json;
+    switch (t->token[0])
+    {
+    case '\"':
+        // Parse a string
+        json.j_type = json.j_string;
+        t->next_token();
+        json.vals.str += t->token;
+        t->next_token();
+        while(t->token[0] != '\"')
+        {
+            json.vals.str += ' ';
+            json.vals.str += t->token;
+            t->next_token();
+        }
+        break;
+    case '[':
+        // Parse a list
+        json.j_type = json.j_list;
+        t->next_token();
+        parse_list(t, json);
+        break;
+    case '{':
+        json.j_type = json.j_json;
+        json.vals.json = new JSON();
+        json.vals.json->parse(t);
+        break;
+    default:
+        // Parse a number
+        json.j_type = json.j_float;
+        json.vals.fl = std::stof(t->token);
+        break;
+    }
+    return json;
+}
+void parse_value(Tokenizer *t, JSON& json)
+{
+    json = parse_value(t);
+}
+
 void parse_list(Tokenizer* t, JSON& json)
 {
-
+    while(t->token[0] != ']')
+    {
+        json.vals.list.push_back(parse_value(t));
+        t->next_token();
+        if(t->token[0] == ']')
+            break;
+        t->next_token();
+    }
 }
 
 void parse_key_value_pair(Tokenizer* t, JSON& json)
@@ -48,44 +110,12 @@ void parse_key_value_pair(Tokenizer* t, JSON& json)
     t->next_token();
     if(t->is_done())
         return;
-    if(t->token[0] != '\"')
-    {
-        printf("No closing \"!\n");
-        return;
-    }
+
     t->next_token();
-    if(t->token[0] != ':')
-        return;
     t->next_token();
-    switch (t->token[0])
-    {
-    case '\"':
-        // Parse a string
-        value.j_type = value.j_string;
-        t->next_token();
-        while(t->token[0] != '\"')
-        {
-            value.vals.s += t->token;
-            value.vals.s += " ";
-            t->next_token();
-        }
-        break;
-    case '[':
-        // Parse a list
-        value.j_type = value.j_list;
-        parse_list(t, json);
-        break;
-    case '{':
-        value.j_type = value.j_json;
-        value.parse(t);
-        break;
-    default:
-        // Parse a number
-        value.j_type = value.j_float;
-        value.vals.f = std::stof(t->token);
-        break;
-    }
-    json[key] = value;
+
+    json[key] = parse_value(t);
+
     t->next_token();
 }
 
@@ -94,9 +124,8 @@ void JSON::parse(Tokenizer* t)
     if(t->token[0] == '{')
     {
         // We are looking at JSON
-        // In a while loop maybe??
         t->next_token();
-        while(t->token[0] == '\"')
+        while(true)
         {
             t->next_token();
             if(t->is_done())
@@ -109,4 +138,71 @@ void JSON::parse(Tokenizer* t)
             t->next_token();
         }
     }
+}
+
+bool is_special(const char c)
+{
+    return c == '{' || c == '}' || c == '\"' || c == ':' || c == ',' || c == '[' || c == ']';
+}
+
+std::string remove_tab(std::string &str)
+{
+    std::string clean;
+    for(char c : str)
+    {
+        if(!isspace(c) || c == ' ')
+        {
+            clean += c;
+        }
+    }
+    str = clean;
+    return clean;
+}
+
+
+
+std::string clean(std::string str)
+{
+    std::string clean_json;
+    for(int i = 0; i < str.length(); i++)
+    {
+        std::string add;
+
+        if(is_special(str[i]))
+        {
+            if(i > 0 && str[i-1] != ' ')
+                add += ' ';
+            add+= str[i];
+            if(i < str.length() && str[i+1] != ' ')
+                add += ' ';
+        }
+        // else if(str[i] == '\n')
+        //     break;
+        else
+            add += str[i];
+
+        clean_json += add;
+    }
+    return clean_json;
+}
+
+std::string read_json_file(const char* file)
+{
+    // Load json file
+    std::string json_string;
+    std::ifstream JsonStream(file, std::ios::in);
+    if(JsonStream.is_open())
+    {
+        std::stringstream sstr;
+        sstr << JsonStream.rdbuf();
+        json_string = sstr.str();
+        JsonStream.close();
+    }
+    remove_tab(json_string);
+    return clean(json_string);
+}
+
+void JSON::parse_from_file(const char* file)
+{
+    this->parse(read_json_file(file));
 }

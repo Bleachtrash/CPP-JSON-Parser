@@ -58,8 +58,11 @@ JSON parse_value(Tokenizer* t)
         // Parse a string
         json.j_type = json.j_string;
         t->next_token();
+        json.vals.str += t->token;
+        t->next_token();
         while(t->token[0] != '\"')
         {
+            json.vals.str += ' ';
             json.vals.str += t->token;
             t->next_token();
         }
@@ -72,7 +75,8 @@ JSON parse_value(Tokenizer* t)
         break;
     case '{':
         json.j_type = json.j_json;
-        json.parse(t);
+        json.vals.json = new JSON();
+        json.vals.json->parse(t);
         break;
     default:
         // Parse a number
@@ -136,12 +140,17 @@ void JSON::parse(Tokenizer* t)
     }
 }
 
-std::string remove_space(std::string &str)
+bool is_special(const char c)
+{
+    return c == '{' || c == '}' || c == '\"' || c == ':' || c == ',' || c == '[' || c == ']';
+}
+
+std::string remove_tab(std::string &str)
 {
     std::string clean;
     for(char c : str)
     {
-        if(!isspace(c))
+        if(!isspace(c) || c == ' ')
         {
             clean += c;
         }
@@ -150,10 +159,7 @@ std::string remove_space(std::string &str)
     return clean;
 }
 
-bool is_special(const char c)
-{
-    return c == '{' || c == '}' || c == '\"' || c == ':' || c == ',' || c == '[' || c == ']';
-}
+
 
 std::string clean(std::string str)
 {
@@ -192,7 +198,7 @@ std::string read_json_file(const char* file)
         json_string = sstr.str();
         JsonStream.close();
     }
-    remove_space(json_string);
+    remove_tab(json_string);
     return clean(json_string);
 }
 

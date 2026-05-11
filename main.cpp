@@ -16,11 +16,11 @@ void printVal(JSON j)
         printf("[ ");
         for(int i = 0; i < j.l().size(); i++)
         {
-            printf("%i: ", i);
+            // printf("      ");
             printVal(j.l()[i]);
             printf(", ");
         }
-        printf("\b\b ]");
+        printf("]");
     }
     else if(j.j_type == j.j_json)
     {
@@ -29,12 +29,12 @@ void printVal(JSON j)
 }
 void printJSON(JSON j)
 {
-    printf("{\n");
+    printf("{ ");
     for(auto i : j.json)
     {
-        printf("   %s: ", i.first.c_str());
+        printf("%s: ", i.first.c_str());
         printVal(i.second);
-        printf(",\n");
+        printf(", ");
     }
     printf("}");
 }

@@ -1,6 +1,21 @@
 {
-    "num1" : [
-        1,
-        "two"
+    "periods": [
+        {
+            "number": 1,
+            "name": "Today",
+            "startTime": "2026-05-11T11:00:00-07:00",
+            "endTime": "2026-05-11T18:00:00-07:00",
+            "temperature": 63,
+            "temperatureUnit": "F",
+            "probabilityOfPrecipitation": {
+                "unitCode": "wmoUnit:percent",
+                "value": 0
+            },
+            "windSpeed": "9 mph",
+            "windDirection": "WNW",
+            "icon": "https://api.weather.gov/icons/land/day/sct?size=medium",
+            "shortForecast": "Mostly Sunny",
+            "detailedForecast": "Mostly sunny. High near 63, with temperatures falling to around 59 in the afternoon. West northwest wind around 9 mph."
+        }
     ]
 }

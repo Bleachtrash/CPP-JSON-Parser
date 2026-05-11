@@ -16,8 +16,8 @@ struct JSON
     } j_type;
     struct Vals
     {
-        float f;
-        std::string s;
+        float fl;
+        std::string str;
         std::vector<JSON> list;
         JSON *json;
     } vals;
@@ -25,8 +25,11 @@ struct JSON
     JSON& operator [](std::string key);
     JSON& operator =(std::string val);
     JSON& operator =(float val);
-    std::string toString();
-    float toFloat();
+    std::string s();
+    float f();
+    std::vector<JSON> l();
+    JSON j();
     void parse(std::string json_str);
     void parse(Tokenizer* t);
+    void parse_from_file(const char* file);
 };

@@ -1,13 +1,11 @@
 {
-    "piss":{
+    "string" : "string",
+    "int" : 10,
+    "list" : [
+        0,
+        "two"
+    ],
+    "json" : {
 
-    },
-    "key": "value",
-    "list": [
-        "list element",
-        {
-            "key": "value",
-            "number": 1
-        }
-    ]
+    }
 }

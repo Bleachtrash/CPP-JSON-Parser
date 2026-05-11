@@ -43,14 +43,13 @@ int main(int argc, char* argv[])
 {
     JSON j;
 
-    j.parse_from_file("test.json");
-    // if(argc == 1)
-    //     j.parse("{ \" list \" : [ 1 , 2 , 3 ] }");
+    if(argc == 1)
+        j.parse("{ \" list \" : [ 1 , 2 , 3 ] }");
 
-    // if(argc == 2)
-    // {
-    //     j.parse_from_file(argv[1]);
-    // }
+    if(argc == 2)
+    {
+        j.parse_from_file(argv[1]);
+    }
 
     printVal(j);
 

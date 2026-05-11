@@ -19,7 +19,7 @@ struct JSON
         float fl;
         std::string str;
         std::vector<JSON> list;
-        JSON *json;
+        // JSON *json;
     } vals;
 
     JSON& operator [](std::string key);
@@ -28,7 +28,7 @@ struct JSON
     std::string s();
     float f();
     std::vector<JSON> l();
-    JSON j();
+    // JSON j();
     void parse(std::string json_str);
     void parse(Tokenizer* t);
     void parse_from_file(const char* file);

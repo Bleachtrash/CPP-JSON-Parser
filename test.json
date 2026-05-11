@@ -1,11 +1,1 @@
-{
-    "string" : "string",
-    "int" : 10,
-    "list" : [
-        0,
-        "two"
-    ],
-    "json" : {
-
-    }
-}
+{ " string " : " string " ,  " num " : 55 , " num2 " : 100.99 }

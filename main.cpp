@@ -1,11 +1,28 @@
 #include "src/json.hpp"
+#include <fstream>
+#include <sstream>
 
-int main()
+int main(int argc, char* argv[])
 {
     JSON j;
 
-    j.parse("{ \" number1 \" : 10 , \" number2 \" : 100 , \" string1 \" : \" Hello There! \" }");
-    // j.parse("{ \" string1 \" : \" Hello there! \" , \" number1 \" : 10.9 }");
+    if(argc == 1)
+        j.parse("{ \" number1 \" : 10 , \" number2 \" : 100 , \" string1 \" : \" Hello There! \" }");
+
+    if(argc == 2)
+    {
+        // Load json file
+        std::string json_string;
+        std::ifstream JsonStream(argv[1], std::ios::in);
+        if(JsonStream.is_open())
+        {
+            std::stringstream sstr;
+            sstr << JsonStream.rdbuf();
+            json_string = sstr.str();
+            JsonStream.close();
+        }
+        j.parse(json_string);
+    }
 
     for(auto i : j.json)
     {

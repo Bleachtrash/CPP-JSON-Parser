@@ -24,7 +24,7 @@ void printVal(JSON j)
     }
     else if(j.j_type == j.j_json)
     {
-        printJSON(j.j());
+        printJSON(j);
     }
 }
 void printJSON(JSON j)
@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
         j.parse_from_file(argv[1]);
     }
 
-    printJSON(j);
+    printVal(j);
 
     return 0;
 }

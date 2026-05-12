@@ -36,10 +36,10 @@ std::vector<JSON> JSON::l()
     return this->vals.list;
 }
 
-JSON JSON::j()
-{
-    return *(this->vals.json);
-}
+// JSON JSON::j()
+// {
+//     return *(this->vals.json);
+// }
 
 void JSON::parse(std::string json_str)
 {
@@ -48,6 +48,8 @@ void JSON::parse(std::string json_str)
 
 
 void parse_list(Tokenizer* t, JSON& json);
+
+void parse_key_value_pair(Tokenizer* t, JSON& json);
 
 JSON parse_value(Tokenizer* t)
 {
@@ -60,7 +62,7 @@ JSON parse_value(Tokenizer* t)
         t->next_token();
         json.vals.str += t->token;
         t->next_token();
-        while(t->token[0] != '\"')
+        while(!t->is_done() && t->token[0] != '\"')
         {
             json.vals.str += ' ';
             json.vals.str += t->token;
@@ -75,8 +77,15 @@ JSON parse_value(Tokenizer* t)
         break;
     case '{':
         json.j_type = json.j_json;
-        json.vals.json = new JSON();
-        json.vals.json->parse(t);
+        t->next_token();
+        while(!t->is_done() && t->token[0] != '}')
+        {
+            parse_key_value_pair(t, json);
+
+            if(t->is_done() || t->token[0] == '}')
+                break;
+            t->next_token();
+        }
         break;
     default:
         // Parse a number
@@ -105,6 +114,7 @@ void parse_list(Tokenizer* t, JSON& json)
 
 void parse_key_value_pair(Tokenizer* t, JSON& json)
 {
+    t->next_token();
     std::string key = t->token;
     JSON value;
     t->next_token();
@@ -121,23 +131,7 @@ void parse_key_value_pair(Tokenizer* t, JSON& json)
 
 void JSON::parse(Tokenizer* t)
 {
-    if(t->token[0] == '{')
-    {
-        // We are looking at JSON
-        t->next_token();
-        while(true)
-        {
-            t->next_token();
-            if(t->is_done())
-                break;
-            
-            parse_key_value_pair(t, *this);
-
-            if(t->is_done() || t->token[0] == '}')
-                break;
-            t->next_token();
-        }
-    }
+    parse_value(t, *this);
 }
 
 bool is_special(const char c)
@@ -176,8 +170,6 @@ std::string clean(std::string str)
             if(i < str.length() && str[i+1] != ' ')
                 add += ' ';
         }
-        // else if(str[i] == '\n')
-        //     break;
         else
             add += str[i];
 

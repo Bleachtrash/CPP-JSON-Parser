@@ -10,14 +10,14 @@ struct Tokenizer
     char* deliminator;
 
     Tokenizer(const char* str) : Tokenizer(str, " ") {}
-    Tokenizer() : Tokenizer("") {}
+    Tokenizer() : Tokenizer(" ") {}
     
     Tokenizer(const char* str, const char* deliminator)
     {
-        this->remaining_str = (char*)malloc(strlen(str));
+        this->remaining_str = (char*)malloc(strlen(str)+1);
         strcpy(this->remaining_str, str);
         this->token = NULL;
-        this->deliminator = (char*)malloc(strlen(deliminator));
+        this->deliminator = (char*)malloc(strlen(deliminator)+1);
         strcpy(this->deliminator, deliminator);
         this->token = strtok(this->remaining_str, this->deliminator);
     }

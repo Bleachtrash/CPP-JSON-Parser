@@ -3,32 +3,42 @@
 #include <cstdlib>
 #include <cstring>
 
+
 struct Tokenizer
 {
-    char* remaining_str;
-    char* token;
-    char* deliminator;
+    std::string remaining_str;
+    std::string token;
+    std::string deliminator;
 
-    Tokenizer(const char* str) : Tokenizer(str, " ") {}
     Tokenizer() : Tokenizer(" ") {}
-    
-    Tokenizer(const char* str, const char* deliminator)
+    Tokenizer(std::string str) : Tokenizer(str, " ") {}
+    Tokenizer(std::string str, std::string deliminator)
     {
-        this->remaining_str = (char*)malloc(strlen(str)+1);
-        strcpy(this->remaining_str, str);
-        this->token = NULL;
-        this->deliminator = (char*)malloc(strlen(deliminator)+1);
-        strcpy(this->deliminator, deliminator);
-        this->token = strtok(this->remaining_str, this->deliminator);
+        this->remaining_str = str;
+        this->deliminator = deliminator;
+        this->next_token();
     }
 
     void next_token()
     {
-        this->token = strtok(NULL, this->deliminator);
+        if(this->remaining_str == "")
+        {
+            this->token = "";
+            return;
+        }
+        auto pos = this->remaining_str.find_first_of(this->deliminator);
+        if(pos == std::string::npos)
+        {
+            this->token = this->remaining_str;
+            this->remaining_str = "";
+            return;
+        }
+        this->token = this->remaining_str.substr(0, pos);
+
+        this->remaining_str = this->remaining_str.substr(pos+1, this->remaining_str.size());
     }
-    
     bool is_done()
     {
-        return this->token == NULL;
+        return this->token.size() == 0;
     }
 };

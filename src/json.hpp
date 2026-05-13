@@ -8,11 +8,11 @@ struct JSON
     std::unordered_map<std::string, JSON> json;
     enum
     {
+        j_null,
         j_string,
         j_float,
         j_list,
-        j_json,
-        j_null,
+        j_collection,
     } j_type;
     struct Vals
     {
@@ -32,4 +32,5 @@ struct JSON
     void parse(std::string json_str);
     void parse(Tokenizer* t);
     void parse_from_file(const char* file);
+    void print();
 };

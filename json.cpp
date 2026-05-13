@@ -36,146 +36,179 @@ std::vector<JSON> JSON::l()
     return this->vals.list;
 }
 
-// JSON JSON::j()
-// {
-//     return *(this->vals.json);
-// }
 
 void JSON::parse(std::string json_str)
 {
-    this->parse(new Tokenizer(json_str.c_str()));
+    this->parse(new Tokenizer(json_str, ""));
 }
 
-
-void parse_list(Tokenizer* t, JSON& json);
-
-void parse_key_value_pair(Tokenizer* t, JSON& json);
-
-JSON parse_value(Tokenizer* t)
+std::string trim(std::string str)
 {
-    JSON json;
-    switch (t->token[0])
-    {
-    case '\"':
-        // Parse a string
-        json.j_type = json.j_string;
-        t->next_token();
-        json.vals.str += t->token;
-        t->next_token();
-        while(!t->is_done() && t->token[0] != '\"')
-        {
-            json.vals.str += ' ';
-            json.vals.str += t->token;
-            t->next_token();
-        }
-        break;
-    case '[':
-        // Parse a list
-        json.j_type = json.j_list;
-        t->next_token();
-        parse_list(t, json);
-        break;
-    case '{':
-        json.j_type = json.j_json;
-        t->next_token();
-        while(!t->is_done() && t->token[0] != '}')
-        {
-            parse_key_value_pair(t, json);
+    auto start = str.find_first_not_of(" ");
+    if(start == std::string::npos)
+        return "";
+    auto end = str.find_last_not_of(" ");
 
-            if(t->is_done() || t->token[0] == '}')
-                break;
-            t->next_token();
-        }
-        break;
-    default:
-        // Parse a number
-        json.j_type = json.j_float;
-        json.vals.fl = std::stof(t->token);
-        break;
+    return str.substr(start, end+1);
+}
+
+JSON parse_collection(Tokenizer* t, JSON& json);
+JSON parse_list(Tokenizer* t, JSON& json);
+
+void JSON::parse(Tokenizer *t)
+{
+    if(t->is_done())
+        return;
+    if(trim((std::string)t->token)[0] == '{')
+    {
+        // We a looking at a collection
+        this->j_type = j_collection;
+
+        std::string token = t->token.substr(1, t->token.size());
+
+        Tokenizer *collection_t = new Tokenizer(token, ",");
+        parse_collection(collection_t, *this);
+        return;
     }
-    return json;
-}
-void parse_value(Tokenizer *t, JSON& json)
-{
-    json = parse_value(t);
+    if(trim((std::string)t->token)[0] == '[')
+    {
+        // We are looking at a list
+        this->j_type = j_list;
+
+        std::string token = t->token.substr(1, t->token.size());
+        Tokenizer* list_t = new Tokenizer(token, ",");
+        parse_list(list_t, *this);
+        return;
+    }
+    if(trim((std::string)t->token)[0] == '\"')
+    {
+        // We are looking at a string
+        this->j_type = j_string;
+
+        std::string val = t->token;
+        val = trim(val);
+        val = val.substr(1, val.size()-2);
+        this->vals.str = val;
+        return;
+    }
+    // Parse a float
+    this->j_type = j_float;
+    this->vals.fl = std::stof(t->token);
 }
 
-void parse_list(Tokenizer* t, JSON& json)
+std::string tokenize_collection(Tokenizer* t)
 {
-    while(t->token[0] != ']')
+    int bracket_count = 0;
+    std::string res;
+
+    while(!t->is_done())
     {
-        json.vals.list.push_back(parse_value(t));
-        t->next_token();
-        if(t->token[0] == ']')
+        std::string token = t->token;
+        token = trim(token);
+        bracket_count += token[0] == '{';
+        bracket_count -= token[token.size()-1] == '}';
+        res += token;
+        res += ':';
+        if(bracket_count <= 0)
             break;
         t->next_token();
     }
+
+    res  = res.substr(0, res.size()-(1 + (res[res.size()-2] == '}')));
+    
+    return res;
 }
 
-void parse_key_value_pair(Tokenizer* t, JSON& json)
+JSON parse_key_value_pair(Tokenizer* t, JSON& json)
 {
-    t->next_token();
-    std::string key = t->token;
-    JSON value;
-    t->next_token();
-    if(t->is_done())
-        return;
+    std::string token = trim((std::string)t->token);
 
-    t->next_token();
-    t->next_token();
+    std::string key = token;
 
-    json[key] = parse_value(t);
-
+    token = t->token;
+    token = trim(token);
     t->next_token();
+    token = tokenize_collection(t);
+    Tokenizer* val_t = new Tokenizer(token, "");
+    JSON val;
+    val.parse(val_t);
+
+    json[key] = val;
+    return json;
 }
 
-void JSON::parse(Tokenizer* t)
+JSON parse_collection(Tokenizer* t, JSON& json)
 {
-    parse_value(t, *this);
+    // t.deliminator = ','
+    while(!t->is_done())
+    {
+        
+        if(t->token[t->token.size()-1] == '}')
+            t->token = t->token.substr(0, t->token.size()-1);
+        std::string token = t->token;
+        token = trim(token);
+
+        Tokenizer *key_value_t = new Tokenizer(token, ":");
+
+        parse_key_value_pair(key_value_t, json);
+
+        t->next_token();
+    }
+    return json;
 }
 
-bool is_special(const char c)
+std::string tokenize_list(Tokenizer* t)
 {
-    return c == '{' || c == '}' || c == '\"' || c == ':' || c == ',' || c == '[' || c == ']';
+    int bracket_count = 0;
+    std::string res;
+
+    while(!t->is_done())
+    {
+        std::string token = t->token;
+        token = trim(token);
+        bracket_count += token[0] == '[';
+        bracket_count -= token[token.size()-1] == ']';
+        res += token;
+        res += ',';
+        if(bracket_count <= 0)
+            break;
+        t->next_token();
+    }
+
+    res  = res.substr(0, res.size()-(1+ (res[res.size()-2] == ']')));
+    
+    return res;
 }
 
-std::string remove_tab(std::string &str)
+JSON parse_list(Tokenizer* t, JSON& json)
+{
+    // t.deliminator = ','
+    while(!t->is_done() && t->token != "]")
+    {
+        std::string token = tokenize_list(t);
+        Tokenizer* val_t = new Tokenizer(token, "");
+        JSON val;
+        val.parse(val_t);
+
+        json.vals.list.push_back(val);
+
+        t->next_token();
+    }
+    return json;
+}
+
+std::string clean_str(std::string str)
 {
     std::string clean;
     for(char c : str)
     {
-        if(!isspace(c) || c == ' ')
+        if(c != '\n')
         {
             clean += c;
         }
     }
     str = clean;
     return clean;
-}
-
-
-
-std::string clean(std::string str)
-{
-    std::string clean_json;
-    for(int i = 0; i < str.length(); i++)
-    {
-        std::string add;
-
-        if(is_special(str[i]))
-        {
-            if(i > 0 && str[i-1] != ' ')
-                add += ' ';
-            add+= str[i];
-            if(i < str.length() && str[i+1] != ' ')
-                add += ' ';
-        }
-        else
-            add += str[i];
-
-        clean_json += add;
-    }
-    return clean_json;
 }
 
 std::string read_json_file(const char* file)
@@ -190,11 +223,57 @@ std::string read_json_file(const char* file)
         json_string = sstr.str();
         JsonStream.close();
     }
-    remove_tab(json_string);
-    return clean(json_string);
+    return clean_str(json_string);
 }
 
 void JSON::parse_from_file(const char* file)
 {
-    this->parse(read_json_file(file));
+    this->parse(trim(read_json_file(file)));
 }
+
+void print_json(JSON j)
+{
+
+}
+
+void JSON::print()
+{
+    switch (this->j_type)
+    {
+    case j_float:
+        printf("%0.2f", this->f());
+        break;
+    case j_string:
+        printf("\"%s\"", this->s().c_str());
+        break;
+    case j_list:
+        printf("[ ");
+        for(int i = 0; i < this->l().size(); i++)
+        {
+            this->l()[i].print();
+            printf(", ");
+        }
+        printf("\b\b ]");
+        break;
+    case j_collection:
+        printf("{ ");
+        for(auto i : this->json)
+        {
+            printf("%s: ", i.first.c_str());
+            i.second.print();
+            printf(", ");
+        }
+        printf("\b\b }");
+        break;
+    default:
+        break;
+    }
+}
+
+// int main()
+// {
+//     JSON j;
+//     j.parse_from_file("test.json");
+//     printf("%i\n", j.j_type);
+//     return 0;
+// }

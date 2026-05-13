@@ -1,0 +1,24 @@
+{"num":10}
+10
+"string"
+["list", "list"]
+
+func trim(string s)
+{
+    // Trims s to remove trailing and preceding whitespace
+}
+if(t.token[0] == '{')
+{
+    Tokenizer collection_t(trim(t.token), ',');
+    // Send collection_t to be further processed via key/value pairs
+}
+if(t.token[0] == '[')
+{
+    Tokenizer list_t(trim(t.token), ',');
+    // Send list_t to be processed via values
+}
+if(t.token[0] == '\"')
+{
+    Tokenizer string_t(trim(t.token), "\");
+    // Send string_t to be processed via string value
+}

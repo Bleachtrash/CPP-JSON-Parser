@@ -31,6 +31,10 @@ float JSON::f()
 {
     return this->vals.fl;
 }
+bool JSON::b()
+{
+    return this->vals.fl;
+}
 std::vector<JSON> JSON::l()
 {
     return this->vals.list;
@@ -89,6 +93,18 @@ void JSON::parse(Tokenizer *t)
         val = trim(val);
         val = val.substr(1, val.size()-2);
         this->vals.str = val;
+        return;
+    }
+    if(trim(t->token) == "true")
+    {
+        this->j_type = j_bool;
+        this->vals.fl = true;
+        return;
+    }
+    if(trim(t->token) == "false")
+    {
+        this->j_type = j_bool;
+        this->vals.fl = false;
         return;
     }
     // Parse a float
@@ -231,11 +247,6 @@ void JSON::parse_from_file(const char* file)
     this->parse(trim(read_json_file(file)));
 }
 
-void print_json(JSON j)
-{
-
-}
-
 void JSON::print()
 {
     switch (this->j_type)
@@ -245,6 +256,9 @@ void JSON::print()
         break;
     case j_string:
         printf("\"%s\"", this->s().c_str());
+        break;
+    case j_bool:
+        printf("%s", this->b()? "true" : "false");
         break;
     case j_list:
         printf("[ ");

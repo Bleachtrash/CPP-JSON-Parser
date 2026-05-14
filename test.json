@@ -1,8 +1,4 @@
-[
-    "one",
-    2.00,
-    ["three", 3],
-    {
-        "four":4
-    }
-]
+{
+    "true" : true,
+    "false" : false
+}

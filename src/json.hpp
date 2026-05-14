@@ -11,6 +11,7 @@ struct JSON
         j_null,
         j_string,
         j_float,
+        j_bool,
         j_list,
         j_collection,
     } j_type;
@@ -27,6 +28,7 @@ struct JSON
     JSON& operator =(float val);
     std::string s();
     float f();
+    bool b();
     std::vector<JSON> l();
     // JSON j();
     void parse(std::string json_str);

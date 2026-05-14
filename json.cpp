@@ -5,6 +5,10 @@
 #include <sstream>
 #include "src/Tokenizer.hpp"
 
+JSON::JSON()
+{
+    this->j_type = j_null;
+}
 JSON& JSON::operator[](std::string key)
 {
     return this->json[key];
@@ -107,6 +111,8 @@ void JSON::parse(Tokenizer *t)
         this->vals.fl = false;
         return;
     }
+    if(trim(t->token) == "null")
+        return;
     // Parse a float
     this->j_type = j_float;
     this->vals.fl = std::stof(t->token);
@@ -278,6 +284,9 @@ void JSON::print()
             printf(", ");
         }
         printf("\b\b }");
+        break;
+    case j_null:
+        printf("null");
         break;
     default:
         break;

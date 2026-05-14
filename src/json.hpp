@@ -23,6 +23,7 @@ struct JSON
         // JSON *json;
     } vals;
 
+    JSON();
     JSON& operator [](std::string key);
     JSON& operator =(std::string val);
     JSON& operator =(float val);
@@ -30,7 +31,6 @@ struct JSON
     float f();
     bool b();
     std::vector<JSON> l();
-    // JSON j();
     void parse(std::string json_str);
     void parse(Tokenizer* t);
     void parse_from_file(const char* file);
